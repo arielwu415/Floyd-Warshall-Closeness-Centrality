@@ -9,11 +9,11 @@ from mpi4py import MPI
 import numpy as np
 
 
-# @param Ar:        The sub-matrix (numpy ndarray) that each processor has
-# @param n:         The original matrix size, or total number of nodes
-# @param row_num:   A list contains the numbers of rows each processor has
-# @param comm:      The mpi4py communication protocol
-def calculate_closeness_centrality(Ar, n, row_numb, comm):
+# @param adj_local:       The sub-matrix (numpy ndarray) that each processor has
+# @param n:               The original matrix size, or total number of nodes
+# @param rows_per_proc:   A list contains the numbers of rows each processor has
+# @param comm:            The mpi4py communication protocol
+def calculate_closeness_centrality(adj_local, n, rows_per_proc, comm):
     
     # Get rank of each processor
     rank = comm.Get_rank()
@@ -28,14 +28,14 @@ def calculate_closeness_centrality(Ar, n, row_numb, comm):
     # | a40 a41 a42 a43 a04 | Q1
     
     ### Create a numpy array to store the centrality values
-    Cr = np.zeros(row_numb[rank])
+    Cr = np.zeros(rows_per_proc[rank])
     
     ### Iterate through all rows in one processor
-    for i in range(row_numb[rank]):
+    for i in range(rows_per_proc[rank]):
         
         # sum up each row except the self node to get the total distance
-        total_dist = sum(Ar[i,:]) - Ar[i,i]
-        centrality = 1 / total_dist
+        total_dist = sum(adj_local[i,:]) - adj_local[i,i]
+        centrality = 1 / (total_dist - 1)
         
         Cr[i] = centrality
     
