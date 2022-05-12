@@ -19,7 +19,7 @@ def floyd_warshall(adj_local, n, rows_per_proc, comm):
         if t != 0:
             sproc = (rank + t) % size
 
-            adj_rproc = np.empty(shape=(n, rows_per_proc[rproc]), dtype='i')
+            adj_rproc = np.empty(shape=(rows_per_proc[rproc], n), dtype='i')
 
             sreq = comm.Isend([adj_local, MPI.INT], dest=sproc, tag=sproc)
             rreq = comm.Irecv([adj_rproc, MPI.INT], source=rproc, tag=rank)
@@ -34,4 +34,4 @@ def floyd_warshall(adj_local, n, rows_per_proc, comm):
         for k in range(0, rproc_num_rows):
             for i in range(0, local_num_rows):
                 for j in range(0, n):
-                    adj_local[i, j] = min(adj_local[i, j], adj_local[i, k + row_offset], adj_rproc[k, j])
+                    adj_local[i, j] = min(adj_local[i, j], adj_local[i, k + row_offset] + adj_rproc[k, j])
