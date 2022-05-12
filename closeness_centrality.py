@@ -17,7 +17,6 @@ def calculate_closeness_centrality(adj_local, n, rows_per_proc, comm):
     
     # Get rank of each processor
     rank = comm.Get_rank()
-    row, col = adj_local.shape
     
     # eg.
     # row_num = [3, 2]
@@ -36,7 +35,7 @@ def calculate_closeness_centrality(adj_local, n, rows_per_proc, comm):
         
         # sum up each row except the self node to get the total distance
         total_dist = sum(adj_local[i,:]) - adj_local[i,i]
-        dist = total_dist / (col - 1)
+        dist = total_dist / (n - 1)
         centrality = 1 / dist
         
         Cr[i] = centrality
