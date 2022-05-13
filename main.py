@@ -7,10 +7,9 @@ Created on Fri May 13 10:37:26 2022
 from mpi4py import MPI
 import networkx as nx
 import numpy as np
+import os
 
 # @dict:        Dictionary containing centrality scores for network nodes
-
-
 def produce_report(dict):
     report = ''
     for key, value in dict.items():
