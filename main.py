@@ -14,38 +14,38 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 # p = 8
-n = 4038
 # If rank 0 read data and distribute submatrix to other processors
 if rank == 0:
     
-    # Rows per processor
-    rows_per_proc = [int(n / size)+1 if i < n%size else int(n / size) for i in range(size)]
-    
     # Getting info out of txt file using edgelist function
     G = nx.read_edgelist("facebook_combined.txt", create_using=nx.DiGraph(), nodetype=int)
-    # Turn directed graph to undirected
-    h = G.to_directed()
-    
+
     # Making adjacency matrix
-    A = nx.to_numpy_array(h, nonedge=float('inf'))
+    A = nx.to_numpy_array(G, nonedge=8000, dtype='i')
     # Making self node values = 0
     A[np.diag_indices_from(A)] = 0
     
-    for i in range(size):
-        splitmatrix = np.array_split(A, size, axis=0)
+    n = A.shape[0]
+
+    # Rows per processor
+    rows_per_proc = [int(n / size)+1 if i < n%size else int(n / size) for i in range(size)]
+    
+    splitmatrix = np.array_split(A, size, axis=0)
 
 else:
     splitmatrix = None
     rows_per_proc = None
+    n = 0
 
 
 # Scatter and broadcast data to processors
 adj_local = comm.scatter(splitmatrix, root=0)
 rows_per_proc = comm.bcast(rows_per_proc, root=0)
+n = comm.bcast(n, root=0)
 
 
 # Print what each processors data is
-print('Processor {} has data:'.format(rank), adj_local)
+print('Processor {} has data:'.format(rank), adj_local, "\nn=", n)
 
 
 ### Floyd-Warshall Algorithm
@@ -95,4 +95,4 @@ C = comm.gather(Cr, root=0)
 if rank == 0:
     sorted_C = C.sort
     print("----------------------------------------------------")
-    print(sorted_C[:30])
+    print(sorted_C)
