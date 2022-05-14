@@ -13,18 +13,19 @@ import time
 
 def produce_report(_list, time):
     report = ''
-    for i, item in enumerate(_list):
-        report += f"node {i}:\t{item}\n"
-
-    with open('output.txt', 'w', encoding="utf-8") as file:
-        file.write(report)
-
+    
     dic = dict()
     num_cols = len(_list[0])
     for i, row in enumerate(_list):
         for j, val in enumerate(row):
             dic[j + (num_cols * i)] = _list[i][j]
-    
+    print(dic)
+    for node, value in dic.items():
+        report += f"node {node}: {value}\n"
+        
+    with open('output.txt', 'w', encoding="utf-8") as file:
+        file.write(report)
+            
     top_keys = sorted(dic, key=dic.get, reverse=True)[:5]
 
     top_five_list = list()
@@ -90,7 +91,7 @@ n = comm.bcast(n, root=0)
 
 
 # Floyd-Warshall Algorithm
-for t in range(0, size+size-1):
+for t in range(0, size+size):
     # print("Task:{}; Processor {}\n".format(t, rank))
     adj_rproc = adj_local
     rproc = (rank - t + size) % size
@@ -136,5 +137,6 @@ C = comm.gather(Cr, root=0)
 
 # Result Output
 if rank == 0:
+    print(C)
     execution_time = time.time() - start_time
     produce_report(C, execution_time)
