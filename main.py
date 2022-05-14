@@ -4,37 +4,46 @@ Created on Fri May 13 10:37:26 2022
 
 @author: Ariel
 """
+import enum
 from mpi4py import MPI
 import networkx as nx
 import numpy as np
-import os
+import time
 
-# @dict:        Dictionary containing centrality scores for network nodes
-def produce_report(dict):
+
+def produce_report(_list, time):
     report = ''
-    for key, value in dict.items():
-        report += f"{key}:\t{value}\n"
+    for i, item in enumerate(_list):
+        report += f"node {i}:\t{item}\n"
 
     with open('output.txt', 'w', encoding="utf-8") as file:
         file.write(report)
 
-    top_five_list = list()
-    try:
-        top_five_list = sorted(dict, key=dict.get, reverse=True)[:5]
-    except:
-        print('oops, something went wrong!')
+    dic = dict()
+    num_cols = len(_list[0])
+    for i, row in enumerate(_list):
+        for j, val in enumerate(row):
+            dic[j + (num_cols * i)] = _list[i][j]
+    
+    top_keys = sorted(dic, key=dic.get, reverse=True)[:5]
 
-    print("Top five nodes: ", end='')
+    top_five_list = list()
+    for key in top_keys:
+        top_five_list.append(dic[key])
+
+    print("\nTop five nodes: ", end='')
+
     total = 0
     for i, item in enumerate(top_five_list):
         if i == len(top_five_list) - 1:
-            total += dict[item]
+            total += item
             print(f'{item}', end='')
         else:
-            total += dict[item]
+            total += item
             print(f'{item}, ', end='')
 
     print(f'\nAverage of top five is: {total / len(top_five_list)}')
+    print(f'\nExecution time: {time}')
 
 
 # Communication Creation
@@ -45,19 +54,23 @@ size = comm.Get_size()
 # p = 8
 # If rank 0 read data and distribute submatrix to other processors
 if rank == 0:
-    
+    # @_list:        list containing centrality scores for network nodes
+    start_time = time.time()
+
     # Getting info out of txt file using edgelist function
-    G = nx.read_edgelist("facebook_combined.txt", create_using=nx.DiGraph(), nodetype=int)
+    G = nx.read_edgelist("test.txt",
+                         create_using=nx.DiGraph(), nodetype=int)
 
     # Making adjacency matrix
     A = nx.to_numpy_array(G, nonedge=8000, dtype='i')
     # Making self node values = 0
-    A[np.diag_indices_from(A)] = 0    
+    A[np.diag_indices_from(A)] = 0
     n = A.shape[0]
 
     # Rows per processor
-    rows_per_proc = [int(n / size)+1 if i < n%size else int(n / size) for i in range(size)]
-    
+    rows_per_proc = [int(n / size)+1 if i < n %
+                     size else int(n / size) for i in range(size)]
+
     splitmatrix = np.array_split(A, size, axis=0)
 
 else:
@@ -73,12 +86,12 @@ n = comm.bcast(n, root=0)
 
 
 # Print what each processors data is
-print('Processor {} has data:'.format(rank), adj_local, "\nn=", n)
+# print('Processor {} has data:'.format(rank), adj_local, "\nn=", n)
 
 
 # Floyd-Warshall Algorithm
-for t in range(0, size):
-    print("Task:{}; Processor {}\n".format(t, rank))
+for t in range(0, size+size-1):
+    # print("Task:{}; Processor {}\n".format(t, rank))
     adj_rproc = adj_local
     rproc = (rank - t + size) % size
 
@@ -103,6 +116,7 @@ for t in range(0, size):
                 adj_local[i, j] = min(
                     adj_local[i, j], adj_local[i, k + row_offset] + adj_rproc[k, j])
 
+# print(rank, adj_local)
 
 # Closeness Centrality Calculation
 Cr = np.zeros(rows_per_proc[rank])
@@ -111,7 +125,7 @@ Cr = np.zeros(rows_per_proc[rank])
 for i in range(rows_per_proc[rank]):
 
     # sum up each row except the self node to get the total distance
-    total_dist = sum(adj_local[i, :]) - adj_local[i, i]
+    total_dist = sum(adj_local[i, :])
     dist = total_dist / (n - 1)
     centrality = 1 / dist
 
@@ -122,6 +136,5 @@ C = comm.gather(Cr, root=0)
 
 # Result Output
 if rank == 0:
-    sorted_C = C.sort
-    print("----------------------------------------------------")
-    print(sorted_C)
+    execution_time = time.time() - start_time
+    produce_report(C, execution_time)
