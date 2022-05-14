@@ -20,8 +20,10 @@ def produce_report(_list, time):
         file.write(report)
 
     dic = dict()
-    for i, item in enumerate(_list[0]):
-        dic[i] = item
+    num_cols = len(_list[0]) - 1
+    for i, row in enumerate(_list):
+        for j, val in enumerate(row):
+            dic[j + (num_cols * i)] = val
 
     top_keys = sorted(dic, key=dic.get, reverse=True)[:5]
 
@@ -29,7 +31,7 @@ def produce_report(_list, time):
     for key in top_keys:
         top_five_list.append(dic[key])
 
-    print("Top five nodes: ", end='')
+    print("\nTop five nodes: ", end='')
 
     total = 0
     for i, item in enumerate(top_five_list):
@@ -41,7 +43,7 @@ def produce_report(_list, time):
             print(f'{item}, ', end='')
 
     print(f'\nAverage of top five is: {total / len(top_five_list)}')
-    print(f'\n\nExecution time: {time}')
+    print(f'\nExecution time: {time}')
 
 
 # Communication Creation
