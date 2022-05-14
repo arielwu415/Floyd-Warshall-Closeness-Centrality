@@ -9,6 +9,7 @@ from mpi4py import MPI
 import networkx as nx
 import numpy as np
 import time
+import sys
 
 
 def produce_report(_list, time):
@@ -28,24 +29,23 @@ def produce_report(_list, time):
             
     top_keys = sorted(dic, key=dic.get, reverse=True)[:5]
 
-    top_five_list = list()
-    for key in top_keys:
-        top_five_list.append(dic[key])
-
     print("\nTop five nodes: ", end='')
 
     total = 0
-    for i, item in enumerate(top_five_list):
-        if i == len(top_five_list) - 1:
-            total += item
-            print(f'{item}', end='')
+    for i, key in enumerate(top_keys):
+        if i == len(top_keys) - 1:
+            total += dic[key]
+            print(f'{key}:{dic[key]}', end='')
         else:
-            total += item
-            print(f'{item}, ', end='')
+            total += dic[key]
+            print(f'{key}:{dic[key]}, ', end='')
 
-    print(f'\nAverage of top five is: {total / len(top_five_list)}')
+    print(f'\nAverage of top five is: {total / len(top_keys)}')
     print(f'\nExecution time: {time}')
 
+
+args = sys.argv
+edge_list_file = args[1] if len(args) > 1 else "facebook_combined.txt"
 
 # Communication Creation
 comm = MPI.COMM_WORLD
@@ -59,7 +59,7 @@ if rank == 0:
     start_time = time.time()
 
     # Getting info out of txt file using edgelist function
-    G = nx.read_edgelist("test.txt",
+    G = nx.read_edgelist(edge_list_file,
                          create_using=nx.DiGraph(), nodetype=int)
 
     # Making adjacency matrix
