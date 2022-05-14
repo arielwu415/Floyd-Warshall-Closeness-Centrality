@@ -45,7 +45,7 @@ def produce_report(_list, time):
 
 
 args = sys.argv
-edge_list_file = args[1] if len(args) > 1 else "test.txt"
+edge_list_file = args[1] if len(args) > 1 else "facebook_combined.txt"
 
 # Communication Creation
 comm = MPI.COMM_WORLD
