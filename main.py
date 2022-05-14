@@ -20,7 +20,7 @@ def produce_report(_list, time):
     for i, row in enumerate(_list):
         for j, val in enumerate(row):
             dic[j + (num_cols * i)] = _list[i][j]
-    print(dic)
+    
     for node, value in dic.items():
         report += f"node {node}: {value}\n"
         
@@ -45,7 +45,7 @@ def produce_report(_list, time):
 
 
 args = sys.argv
-edge_list_file = args[1] if len(args) > 1 else "facebook_combined.txt"
+edge_list_file = args[1] if len(args) > 1 else "test.txt"
 
 # Communication Creation
 comm = MPI.COMM_WORLD
@@ -137,6 +137,6 @@ C = comm.gather(Cr, root=0)
 
 # Result Output
 if rank == 0:
-    print(C)
+
     execution_time = time.time() - start_time
     produce_report(C, execution_time)
