@@ -23,7 +23,7 @@ def produce_report(_list, time):
     num_cols = len(_list[0]) - 1
     for i, row in enumerate(_list):
         for j, val in enumerate(row):
-            dic[j + (num_cols * i)] = val
+            dic[j + (num_cols * i)] = _list[i][j]
 
     top_keys = sorted(dic, key=dic.get, reverse=True)[:5]
 
